@@ -8,3 +8,5 @@ Format should be:
 1 Witch Enchanter // Witch-Blessed Meadow (MH3) 239
 1 An Offer You Can't Refuse (SNC) 464 *F*
 1 Arcane Signet (CMM) 367 *F*
+
+Open the HTML file and paste it. Allow your browser to download multiple files.
