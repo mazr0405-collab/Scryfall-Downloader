@@ -9,4 +9,6 @@ Format should be:
 1 An Offer You Can't Refuse (SNC) 464 *F*
 1 Arcane Signet (CMM) 367 *F*
 
-Open the HTML file and paste it. Allow your browser to download multiple files.
+Open the HTML file and paste it. 
+Allow your browser to download multiple files.
+Files will be stored to your download folder.
