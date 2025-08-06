@@ -1,4 +1,4 @@
-Simple HTML file to mass download high quality Scryfall Scans  
+Simple HTML file to mass download high quality Scryfall Scans which is 300 DPI.  
 Export your deck in Moxfield.  
 Open the HTML file and paste it.   
 Allow your browser to download multiple files.  
