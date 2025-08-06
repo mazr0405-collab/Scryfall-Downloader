@@ -1,7 +1,7 @@
-Export your deck in Moxfield.
-Open the HTML file and paste it. 
-Allow your browser to download multiple files.
-Files will be stored to your download folder.
+Export your deck in Moxfield.  
+Open the HTML file and paste it.   
+Allow your browser to download multiple files.  
+Files will be stored to your download folder.  
 
 Sample:   
 1 Magda, Brazen Outlaw (KHM) 312  
