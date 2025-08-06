@@ -101,6 +101,7 @@
             const lines = decklist.split('\n');
             const processedCards = new Set();
             const invalidLines = [];
+            const erroredCards = [];
 
             for (const line of lines) {
                 // Parse line: e.g., "1 Wandering Archaic // Explore the Vastlands (PSTX) 6p *F*"
@@ -135,7 +136,7 @@
                             `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}&set=${scryfallSetCode.toLowerCase()}`
                         );
                         if (!response.ok) {
-                            status.textContent += `Error fetching ${cardName}: ${response.statusText}\n`;
+                            erroredCards.push(`${cardName} (${setCode}) ${collectorNumber}: ${response.statusText}`);
                             continue;
                         }
                     }
@@ -159,7 +160,7 @@
                     }
 
                     if (imageUris.length === 0) {
-                        status.textContent += `No valid PNG images for ${cardName}\n`;
+                        erroredCards.push(`${cardName} (${setCode}) ${collectorNumber}: No valid PNG images`);
                         continue;
                     }
 
@@ -170,7 +171,7 @@
 
                         const imageResponse = await fetch(imageUrl);
                         if (!imageResponse.ok) {
-                            status.textContent += `Error downloading image for ${cardName}${faceSuffix}: ${imageResponse.statusText}\n`;
+                            erroredCards.push(`${cardName}${faceSuffix} (${setCode}) ${collectorNumber}: Error downloading image - ${imageResponse.statusText}`);
                             continue;
                         }
                         const imageBlob = await imageResponse.blob();
@@ -194,7 +195,7 @@
 
                             const imageResponse = await fetch(imageUrl);
                             if (!imageResponse.ok) {
-                                status.textContent += `Error downloading image for ${cardName}${faceSuffix} (copy ${i}): ${imageResponse.statusText}\n`;
+                                erroredCards.push(`${cardName}${faceSuffix} (${setCode}) ${collectorNumber} (copy ${i}): Error downloading image - ${imageResponse.statusText}`);
                                 continue;
                             }
                             const imageBlob = await imageResponse.blob();
@@ -214,21 +215,31 @@
                     // Add delay to respect Scryfall API rate limits (100ms per request)
                     await new Promise(resolve => setTimeout(resolve, 100));
                 } catch (error) {
-                    status.textContent += `Error processing ${cardName}: ${error.message}\n`;
+                    erroredCards.push(`${cardName} (${setCode}) ${collectorNumber}: ${error.message}`);
                 }
             }
 
-            // Display summary of invalid lines
+            // Display summaries at the end
+            status.textContent += '\nDownload Summary:\n';
             if (invalidLines.length > 0) {
-                status.textContent += '\nSummary of invalid lines:\n';
+                status.textContent += 'Invalid lines:\n';
                 invalidLines.forEach(line => {
                     status.textContent += `- ${line}\n`;
                 });
             } else {
-                status.textContent += '\nNo invalid lines detected.\n';
+                status.textContent += 'No invalid lines detected.\n';
             }
 
-            status.textContent += 'Download complete! Check your Downloads folder.\n';
+            if (erroredCards.length > 0) {
+                status.textContent += '\nErrored cards:\n';
+                erroredCards.forEach(error => {
+                    status.textContent += `- ${error}\n`;
+                });
+            } else {
+                status.textContent += '\nNo errored cards detected.\n';
+            }
+
+            status.textContent += '\nDownload complete! Check your Downloads folder.\n';
         }
     </script>
 </body>
