@@ -73,12 +73,17 @@
 </head>
 <body>
     <h1>Scryfall Decklist Image Downloader</h1>
-    <p>Paste your Moxfield decklist below (e.g., "4 Abundant Growth (INR) 184" or "1 Ancient Tomb (PLST) TMP-315").</p>
+    <p>Paste your Moxfield decklist below (e.g., "4 Abundant Growth (INR) 184" or "1 Wandering Archaic // Explore the Vastlands (PSTX) 6p").</p>
     <textarea id="decklist" placeholder="Paste your decklist here..."></textarea>
     <button onclick="downloadImages()">Download Images</button>
     <div id="status"></div>
 
     <script>
+        // Map Moxfield set codes to Scryfall set codes
+        const setCodeMap = {
+            'PSTX': 'pSTX', // Moxfield's PSTX maps to Scryfall's pSTX for Strixhaven promos
+        };
+
         async function downloadImages() {
             const decklist = document.getElementById('decklist').value.trim();
             const status = document.getElementById('status');
@@ -94,7 +99,7 @@
             const invalidLines = [];
 
             for (const line of lines) {
-                // Parse line: e.g., "1 Ancient Tomb (PLST) TMP-315 *F*"
+                // Parse line: e.g., "1 Wandering Archaic // Explore the Vastlands (PSTX) 6p *F*"
                 const match = line.match(/^(\d+)\s+(.+?)\s+\(([A-Z0-9]+)\)\s+([A-Za-z0-9-]+)(?:\s+\*.*\*)?$/);
                 if (!match) {
                     invalidLines.push(line);
@@ -103,6 +108,7 @@
 
                 const [, quantity, cardName, setCode, collectorNumber] = match;
                 const qty = parseInt(quantity);
+                const scryfallSetCode = setCodeMap[setCode] || setCode; // Use mapped set code or original
 
                 // Skip if card already processed
                 const cardKey = `${cardName}|${setCode}|${collectorNumber}`;
@@ -113,15 +119,23 @@
                 processedCards.add(cardKey);
 
                 try {
-                    // Fetch card data from Scryfall
-                    const response = await fetch(
-                        `https://api.scryfall.com/cards/${setCode.toLowerCase()}/${collectorNumber}`
+                    // Try fetching card data by set code and collector number
+                    let cardData;
+                    let response = await fetch(
+                        `https://api.scryfall.com/cards/${scryfallSetCode.toLowerCase()}/${collectorNumber}`
                     );
                     if (!response.ok) {
-                        status.textContent += `Error fetching ${cardName}: ${response.statusText}\n`;
-                        continue;
+                        // Fallback to fuzzy search by card name
+                        status.textContent += `Set code/collector number failed for ${cardName}, trying fuzzy search...\n`;
+                        response = await fetch(
+                            `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cardName)}&set=${scryfallSetCode.toLowerCase()}`
+                        );
+                        if (!response.ok) {
+                            status.textContent += `Error fetching ${cardName}: ${response.statusText}\n`;
+                            continue;
+                        }
                     }
-                    const cardData = await response.json();
+                    cardData = await response.json();
 
                     // Handle single-faced and double-faced cards
                     let imageUris = [];
@@ -148,7 +162,7 @@
                     // Download images for each face
                     for (const { uri: imageUrl, name: faceName } of imageUris) {
                         const faceSuffix = imageUris.length > 1 ? `_${faceName.replace(/[^a-zA-Z0-9]/g, '_')}` : '';
-                        const fileName = `${cardName.replace(/[^a-zA-Z0-9]/g, '_')}_${setCode}_${collectorNumber}${faceSuffix}.png`;
+                        const fileName = `${cardName.replace(/[^a-zA-Z0-9]/g, '_')}_${scryfallSetCode}_${collectorNumber}${faceSuffix}.png`;
 
                         const imageResponse = await fetch(imageUrl);
                         if (!imageResponse.ok) {
@@ -172,7 +186,7 @@
                     for (let i = 1; i < qty; i++) {
                         for (const { uri: imageUrl, name: faceName } of imageUris) {
                             const faceSuffix = imageUris.length > 1 ? `_${faceName.replace(/[^a-zA-Z0-9]/g, '_')}` : '';
-                            const fileName = `${cardName.replace(/[^a-zA-Z0-9]/g, '_')}_${setCode}_${collectorNumber}_copy${i}${faceSuffix}.png`;
+                            const fileName = `${cardName.replace(/[^a-zA-Z0-9]/g, '_')}_${scryfallSetCode}_${collectorNumber}_copy${i}${faceSuffix}.png`;
 
                             const imageResponse = await fetch(imageUrl);
                             if (!imageResponse.ok) {
